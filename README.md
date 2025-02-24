@@ -1,6 +1,6 @@
-# EG
+# EndGame
 
-Assembly EndGame built using React.
+Hangman game built using React.
 
 ### How to play:
 
