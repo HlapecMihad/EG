@@ -4,9 +4,11 @@ import Letter from "./Letter";
 import { languages } from "../languages/languages";
 import React from "react";
 import { clsx } from "clsx";
+import { getFarewellText, getRandomWord } from "../utils/utils";
+import Confetti from "react-confetti";
 
 export default function Main() {
-	const [currentWord, setCurrentWord] = React.useState("react");
+	const [currentWord, setCurrentWord] = React.useState(() => getRandomWord());
 	const [guessedLetters, setGuessedLetters] = React.useState([]);
 
 	const alphabet = "abcdefghijklmnopqrstuvwxyz";
@@ -15,7 +17,17 @@ export default function Main() {
 		(letter) => !currentWord.includes(letter)
 	).length;
 
-	console.log(wrongGuessCount);
+	const isGameWon = currentWord
+		.split("")
+		.every((letter) => guessedLetters.includes(letter));
+
+	const isGameLost = wrongGuessCount >= languages.length - 1;
+
+	const isGameOver = isGameWon || isGameLost;
+
+	const lastGuessedLetter = guessedLetters[guessedLetters.length - 1];
+	const isLastGuessIncorrect =
+		lastGuessedLetter && !currentWord.includes(lastGuessedLetter);
 
 	const languageElements = languages.map((lang, index) => {
 		const isLanguageLost = index < wrongGuessCount;
@@ -33,11 +45,18 @@ export default function Main() {
 		);
 	});
 
-	const wordElements = currentWord.split("").map((letter, index) => (
-		<span key={index} className="word-letter">
-			{guessedLetters.includes(letter) ? letter.toUpperCase() : ""}
-		</span>
-	));
+	const wordElements = currentWord.split("").map((letter, index) => {
+		const letterClassName = clsx(
+			isGameLost && !guessedLetters.includes(letter) && "missed-letter"
+		);
+		return (
+			<span key={index} className={letterClassName}>
+				{guessedLetters.includes(letter) || isGameLost
+					? letter.toUpperCase()
+					: ""}
+			</span>
+		);
+	});
 
 	const keyboardElements = alphabet.split("").map((letter) => {
 		const isGuessed = guessedLetters.includes(letter);
@@ -53,6 +72,7 @@ export default function Main() {
 				className={className}
 				key={letter}
 				onClick={() => clickedLetter(letter)}
+				disabled={isGameOver}
 			>
 				{letter.toUpperCase()}
 			</button>
@@ -65,8 +85,49 @@ export default function Main() {
 		);
 	}
 
+	const gameStatusClass = clsx("game-status", {
+		won: isGameWon,
+		lost: isGameLost,
+		farewell: !isGameOver && isLastGuessIncorrect,
+	});
+
+	function renderGameStatus() {
+		if (!isGameOver && isLastGuessIncorrect) {
+			return (
+				<p className="farewell-message">
+					{getFarewellText(languages[wrongGuessCount - 1].name)}
+				</p>
+			);
+		}
+
+		if (isGameWon) {
+			return (
+				<>
+					<h2>You win!</h2>
+					<p>Well done! 🎉</p>
+				</>
+			);
+		}
+		if (isGameLost) {
+			return (
+				<>
+					<h2>Game over!</h2>
+					<p>You lose! Better start learning Assembly 😭</p>
+				</>
+			);
+		}
+
+		return null;
+	}
+
+	function startNewGame() {
+		setCurrentWord(getRandomWord());
+		setGuessedLetters([]);
+	}
+
 	return (
 		<main>
+			{isGameWon && <Confetti recycle={false} numberOfPieces={1000} />}
 			<div>
 				<h1 className="instructions">Assembly: Endgame</h1>
 				<p className="static-text">
@@ -74,10 +135,7 @@ export default function Main() {
 					from Assembly!
 				</p>
 			</div>
-			<section className="game-status">
-				<h2>You win!</h2>
-				<p>Well done! 🎉</p>
-			</section>
+			<section className={gameStatusClass}>{renderGameStatus()}</section>
 			<section className="language-chips">
 				<Languages languages={languageElements} />
 			</section>
@@ -87,7 +145,11 @@ export default function Main() {
 			<section className="keyboard">
 				<Letter keyboardElements={keyboardElements} />
 			</section>
-			<button className="new-game">New Game</button>
+			{isGameOver && (
+				<button onClick={startNewGame} className="new-game">
+					New Game
+				</button>
+			)}
 		</main>
 	);
 }
