@@ -6,6 +6,10 @@ Hangman game built using React.
 
 Played the same as Hangman but instead of body parts the hangman is programming languages. Word is randomly choosen from a list. Click on the letter. If the letter is correct, it will display word space. If the letter is wrong, one of the programming languages will be removed. Try to guess the word before all the languages are removed.
 
+### Preview Photo
+![image](https://github.com/user-attachments/assets/ba22d697-acec-43d7-9819-7a4b409706e6)
+
+
 ## Prerequisites
 
 Before you begin, ensure you have the following versions installed:
